@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <time.h>
 using namespace std;
 
 void terminate_on_error(HIDS);
@@ -56,9 +57,9 @@ int main()
 		terminate_on_error(hCam);
 	}
 
-	// Setze Software Triggermodus
-	if(is_SetExternalTrigger(hCam, IS_SET_TRIGGER_SOFTWARE) != IS_SUCCESS){
-		cout<<"Set trogger mode error\n";
+	// Setze Triggermodus
+	if(is_SetExternalTrigger(hCam, IS_SET_TRIGGER_LO_HI) != IS_SUCCESS){
+		cout<<"Set trigger mode error\n";
 		terminate_on_error(hCam);
 	}
 
@@ -101,11 +102,25 @@ int main()
 
 
 	// Ziehe ein Einzelbild von der Kamera ein und lege es in aktiven Bildspeicher ab
-	if(is_FreezeVideo(hCam, IS_WAIT) != IS_SUCCESS){
+	/*if(is_FreezeVideo(hCam, IS_WAIT) != IS_SUCCESS){
 		cout<<"Capture single picture error\n";
+		terminate_on_error(hCam);
+	}*/
+	
+	// Enable FRAME-Event
+	is_EnableEvent(hCam, IS_SET_EVENT_FRAME);
+	
+	// fortlaufende Triggerbereitschaft im Triggermodus
+	if(is_CaptureVideo(hCam, IS_WAIT) != IS_SUCCESS){
+		cout << "is_CaptureVideo error:\n";
 		terminate_on_error(hCam);
 	}
 	
+	while(true){
+	nRet = IS_NO_SUCCESS;
+	nRet = is_WaitEvent(hCam, IS_SET_EVENT_FRAME, INFINITE);
+	if(nRet == IS_SUCCESS)	
+	{
 	// Save image to file
 	// Save jpeg from active memory with quality 80 (without file open dialog)
 	IMAGE_FILE_PARAMS ImageFileParams;
@@ -114,15 +129,18 @@ int main()
 	ImageFileParams.pnImageID = NULL;
 	ImageFileParams.ppcImageMem = NULL;
 
-	ImageFileParams.pwchFileName = L"./image.jpg";
+	wstring filename = L"image" + to_wstring(time(0)) + L".jpg";
+	ImageFileParams.pwchFileName = (wchar_t*)filename.c_str();
 	ImageFileParams.nFileType = IS_IMG_JPG;
 	ImageFileParams.nQuality = 80;
 
-	if(is_ImageFile(hCam, IS_IMAGE_FILE_CMD_SAVE, (void*)&ImageFileParams, sizeof(ImageFileParams)) != IS_SUCCESS){
-		cout<<"Save image to file error\n";
-		terminate_on_error(hCam);
+		if(is_ImageFile(hCam, IS_IMAGE_FILE_CMD_SAVE, (void*)&ImageFileParams, sizeof(ImageFileParams)) != IS_SUCCESS){
+			cout<<"Save image to file error\n";
+			terminate_on_error(hCam);
+		}
+		cout << "Saved image to " << ImageFileParams.pwchFileName << endl;
 	}
-	cout << "Saved image to " << ImageFileParams.pwchFileName << endl;
+	}	
 
 	// Cleanup
 	if(is_FreeImageMem(hCam, pcMem, iMemID) != IS_SUCCESS){
