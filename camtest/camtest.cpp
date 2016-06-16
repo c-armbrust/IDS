@@ -12,6 +12,9 @@ constexpr int sizeX = 640;
 constexpr int sizeY = 480;
 constexpr int bitsPerPixel = 8;
 
+constexpr double cPCLK = 6;
+constexpr double cFPS = 5;
+
 int main()
 {
 	HIDS hCam = 0; // 0: Die erste freie Kamera wird geöffnet
@@ -120,20 +123,27 @@ int main()
 	}
 
 	// Set this pixel clock
-	UINT nPixelClockLow = nMin;
+	UINT nPixelClockLow = cPCLK;//nMin;
     if(is_PixelClock(hCam, IS_PIXELCLOCK_CMD_SET, (void*)&nPixelClockLow, sizeof(nPixelClockLow)) != IS_SUCCESS) {
 		cout<<"Set pixel clock error:\n";
 		terminate_on_error(hCam);
 	}
 	cout << "Set pixel clock to: " << nPixelClockLow << endl;
 
-
-	// Ziehe ein Einzelbild von der Kamera ein und lege es in aktiven Bildspeicher ab
-	/*if(is_FreezeVideo(hCam, IS_WAIT) != IS_SUCCESS){
-		cout<<"Capture single picture error\n";
+	// Set framerate
+	double fpsToSet=cFPS, newFPS; 
+	if(is_SetFrameRate(hCam, fpsToSet, &newFPS) != IS_SUCCESS){
+		cout<<"Set framerate error\n";
 		terminate_on_error(hCam);
-	}*/
-	
+	}
+	if(newFPS == fpsToSet)
+		cout << "Successfully set FPS to " << newFPS << endl;
+	else
+	{
+		cout << "Failed to set FPS to " << fpsToSet << endl;  
+		cout << "FPS: " << newFPS << endl;
+	}
+
 	// Enable FRAME-Event
 	is_EnableEvent(hCam, IS_SET_EVENT_FRAME);
 	
@@ -142,7 +152,15 @@ int main()
 		cout << "is_CaptureVideo error:\n";
 		terminate_on_error(hCam);
 	}
+		// Get current pixel clock
+	if(is_PixelClock(hCam, IS_PIXELCLOCK_CMD_GET, (void*)&nPixelClock, sizeof(nPixelClock)) != IS_SUCCESS) {
+		cout<<"Get pixel clock error\n";
+		terminate_on_error(hCam);
+	}
+	cout << "Pixelclock = " << nPixelClock << endl;
 	
+	double dblFPS;
+	int img_num=0;
 	while(true){
 	nRet = IS_NO_SUCCESS;
 	nRet = is_WaitEvent(hCam, IS_SET_EVENT_FRAME, INFINITE);
@@ -156,7 +174,7 @@ int main()
 	ImageFileParams.pnImageID = NULL;
 	ImageFileParams.ppcImageMem = NULL;
 
-	wstring filename = L"image" + to_wstring(time(0)) + L".jpg";
+	wstring filename = L"image" + to_wstring(++img_num/*time(0)*/) + L".jpg";
 	ImageFileParams.pwchFileName = (wchar_t*)filename.c_str();
 	ImageFileParams.nFileType = IS_IMG_JPG;
 	ImageFileParams.nQuality = 80;
@@ -166,7 +184,16 @@ int main()
 			terminate_on_error(hCam);
 		}
 		wcout << L"Saved image to " << filename << endl;
-	}
+		
+		// Get frames per second
+		dblFPS;
+		if(is_GetFramesPerSecond(hCam, &dblFPS) != IS_SUCCESS){
+			cout<<"Get FPS error\n";
+			terminate_on_error(hCam);
+		}	
+		cout << "FPS " << dblFPS << endl;
+
+	}	
 	}	
 
 	// Cleanup
