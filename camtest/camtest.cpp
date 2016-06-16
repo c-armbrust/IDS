@@ -20,6 +20,33 @@ int main()
 		terminate_on_error(hCam);
 	}	
 
+	// Get camera infos
+	CAMINFO pInfo;
+	if(is_GetCameraInfo(hCam, &pInfo) != IS_SUCCESS){
+		cout<<"Get camera info error\n";
+		terminate_on_error(hCam);
+	}
+	cout << "Kamera Infos:\n";
+	cout << "--------------------\n";
+	cout << "Seriennummer: " << pInfo.SerNo << endl;
+	cout << "Hersteller: " << pInfo.ID << endl;
+	cout << "HW Version USB Board: " << pInfo.Version << endl;
+	cout << "Systemdatum des Endtests: " << pInfo.Date << endl;
+	cout << "Kamera-ID: " << (int)pInfo.Select << endl; // Ab Werk steht die Kamera-ID auf 1. Kann mit is_SetCameraID geändert werden
+	if(pInfo.Type == IS_CAMERA_TYPE_UEYE_USB_SE)
+		cout << "Kameratyp: USB uEye SE" << endl; 
+	cout << endl;  
+
+	cout << "ueye API Info\n";
+	cout << "--------------------\n";
+	int version = is_GetDLLVersion();
+	int build = version & 0xFFFF;
+	version = version >> 16;
+	int minor = version & 0xFF;
+	version = version >> 8;
+	int major = version & 0xFF;
+	cout << "API version " << major << "." << minor << "." << build << endl;
+	cout << endl;
 	//Bitmap-Modus setzen (in Systemspeicher digitalisieren)
 	if(is_SetDisplayMode(hCam, IS_SET_DM_DIB) != IS_SUCCESS){
 		cout<<"Set display mode error\n";
@@ -138,7 +165,7 @@ int main()
 			cout<<"Save image to file error\n";
 			terminate_on_error(hCam);
 		}
-		cout << "Saved image to " << ImageFileParams.pwchFileName << endl;
+		wcout << L"Saved image to " << filename << endl;
 	}
 	}	
 
