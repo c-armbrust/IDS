@@ -13,7 +13,7 @@ constexpr int sizeY = 480;
 constexpr int bitsPerPixel = 8;
 
 constexpr double cPCLK = 6;
-constexpr double cFPS = 5;
+constexpr double cFPS = 2;
 
 int main()
 {
@@ -93,14 +93,6 @@ int main()
 		terminate_on_error(hCam);
 	}
 
-	// Get current pixel clock
-	UINT nPixelClock;
-	if(is_PixelClock(hCam, IS_PIXELCLOCK_CMD_GET, (void*)&nPixelClock, sizeof(nPixelClock)) != IS_SUCCESS) {
-		cout<<"Get pixel clock error\n";
-		terminate_on_error(hCam);
-	}
-	cout << "Pixelclock = " << nPixelClock << endl;
-
 	// Get pixel clock range
 	UINT nRange[3];
 	UINT nMin=0, nMax=0, nInc=0;
@@ -123,7 +115,7 @@ int main()
 	}
 
 	// Set this pixel clock
-	UINT nPixelClockLow = cPCLK;//nMin;
+	UINT nPixelClockLow = nMin;
     if(is_PixelClock(hCam, IS_PIXELCLOCK_CMD_SET, (void*)&nPixelClockLow, sizeof(nPixelClockLow)) != IS_SUCCESS) {
 		cout<<"Set pixel clock error:\n";
 		terminate_on_error(hCam);
@@ -144,6 +136,56 @@ int main()
 		cout << "FPS: " << newFPS << endl;
 	}
 
+	// Get Exposure capabilities
+	UINT nCaps = 0;
+	nRet = is_Exposure(hCam, IS_EXPOSURE_CMD_GET_CAPS, (void*)&nCaps, sizeof(nCaps));
+	if (nRet == IS_SUCCESS)
+	{	cout << "Exposure capabilities:\n";
+		if(nCaps & IS_EXPOSURE_CAP_EXPOSURE)
+			cout << "Die Belichtungszeiteinstellung wird unterstütz\n";
+  		if (nCaps & IS_EXPOSURE_CAP_FINE_INCREMENT)
+      		cout << "Das feine Belichtungszeitraster wird unterstütz\n";
+		if(nCaps & IS_EXPOSURE_CAP_LONG_EXPOSURE)
+			cout << "Die Langzeitbelichtung wird unterstütz\n";
+		if(nCaps & IS_EXPOSURE_CAP_DUAL_EXPOSURE)
+			cout << "Der Sensor unterstützt die duale Belichtun\n";
+	}
+	else
+	{
+		cout << "Get exposure caps error\n";
+		terminate_on_error(hCam);
+	}
+
+		// Get Exposure Infos (values in ms)
+	double ExposureRange[3];
+	if(is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE, (void*)&ExposureRange, sizeof(ExposureRange)) != IS_SUCCESS){
+		cout << "Get exposure range infos error\n";
+		terminate_on_error(hCam);
+	}
+	double minExposure = ExposureRange[0];
+	double maxExposure = ExposureRange[1];
+	double incExposure = ExposureRange[2];
+	cout << "Min exposure: " << minExposure << " ms" << endl;
+	cout << "Max exposure: " << maxExposure << " ms" << endl;
+	cout << "Exposure increment: " << incExposure << " ms" << endl;
+	
+	// Set min exposure time
+	cout << "Set exposure to min exposure time\n";
+	if(is_Exposure(hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, (void*)&minExposure, sizeof(minExposure)) != IS_SUCCESS){
+		cout << "Set exposure error\n";
+		terminate_on_error(hCam);
+	}
+
+	// Aktuell eingestellte Belichtungszeit:
+	double nExposure;
+	if(is_Exposure(hCam, IS_EXPOSURE_CMD_GET_EXPOSURE, (void*)&nExposure, sizeof(nExposure)) != IS_SUCCESS){
+		cout << "Get current exposure error\n";
+		terminate_on_error(hCam);
+	}
+	cout << "Current Exposure: " << nExposure << " ms" << endl;
+	
+
+
 	// Enable FRAME-Event
 	is_EnableEvent(hCam, IS_SET_EVENT_FRAME);
 	
@@ -152,7 +194,8 @@ int main()
 		cout << "is_CaptureVideo error:\n";
 		terminate_on_error(hCam);
 	}
-		// Get current pixel clock
+	// Get current pixel clock
+	UINT nPixelClock;
 	if(is_PixelClock(hCam, IS_PIXELCLOCK_CMD_GET, (void*)&nPixelClock, sizeof(nPixelClock)) != IS_SUCCESS) {
 		cout<<"Get pixel clock error\n";
 		terminate_on_error(hCam);
