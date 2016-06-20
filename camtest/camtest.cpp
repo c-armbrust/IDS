@@ -14,6 +14,7 @@ constexpr int bitsPerPixel = 8;
 
 constexpr double cPCLK = 6;
 constexpr double cFPS = 2;
+constexpr double cEXP = 200;
 
 int main()
 {
@@ -104,9 +105,8 @@ int main()
 	    nMax = nRange[1];
 	    nInc = nRange[2];
 		cout<<"Pixeltakt infos:\n";
-		cout<<"Min: "<<nMin<<endl;
-		cout<<"Max: "<<nMax<<endl;
-		cout<<"Inc: "<<nInc<<endl;
+		cout << nMin << " MHz - " << nMax << " MHz\n";
+		cout << "Increment: " << nInc << " MHz\n";
 	}
 	else
 	{
@@ -170,6 +170,7 @@ int main()
 	cout << "Exposure increment: " << incExposure << " ms" << endl;
 	
 	// Set min exposure time
+	minExposure = cEXP; // for testing assign a value other than min 
 	cout << "Set exposure to min exposure time\n";
 	if(is_Exposure(hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, (void*)&minExposure, sizeof(minExposure)) != IS_SUCCESS){
 		cout << "Set exposure error\n";
