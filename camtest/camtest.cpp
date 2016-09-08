@@ -184,7 +184,23 @@ int main()
 		terminate_on_error(hCam);
 	}
 	cout << "Current Exposure: " << nExposure << " ms" << endl;
-	
+
+	// HardwareverstÃrkung (Gain Boost) aktivieren und Gain setzen
+	cout << "Enable hardware gain boost.\n";
+	if(is_SetGainBoost(hCam, IS_SET_GAINBOOST_ON) != IS_SUCCESS){
+		cout << "is_SetGainBoost error:\n";
+		terminate_on_error(hCam);
+	}
+
+	if(is_SetHardwareGain(hCam, 30, 0, 0, 0) != IS_SUCCESS)
+	{
+		cout << "is_SetHardwareGain error:\n";
+		terminate_on_error(hCam);
+	}
+	// Get Master Gain to display it.
+	int mastergain;
+	mastergain = is_SetHardwareGain(hCam, IS_GET_MASTER_GAIN, 0, 0, 0);
+	cout << "Set hardware gain to: " << mastergain <<  endl;
 
 
 	// Enable FRAME-Event
