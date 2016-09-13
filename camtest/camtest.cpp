@@ -234,7 +234,7 @@ int main()
 	ImageFileParams.pnImageID = NULL;
 	ImageFileParams.ppcImageMem = NULL;
 
-	wstring filename = L"image" + to_wstring(++img_num/*time(0)*/) + L".jpg";
+	wstring filename = L"/media/sdsto/image" + to_wstring(++img_num/*time(0)*/) + L".jpg";
 	ImageFileParams.pwchFileName = (wchar_t*)filename.c_str();
 	ImageFileParams.nFileType = IS_IMG_JPG;
 	ImageFileParams.nQuality = 80;
