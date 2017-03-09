@@ -89,7 +89,7 @@ int main()
 	}
 
 	// Setze Triggermodus
-	if(is_SetExternalTrigger(hCam, IS_SET_TRIGGER_LO_HI) != IS_SUCCESS){
+	if(is_SetExternalTrigger(hCam, IS_SET_TRIGGER_SOFTWARE) != IS_SUCCESS){
 		cout<<"Set trigger mode error\n";
 		terminate_on_error(hCam);
 	}
@@ -221,11 +221,24 @@ int main()
 	
 	double dblFPS;
 	int img_num=0;
+
+	/*
 	while(true){
 	nRet = IS_NO_SUCCESS;
 	nRet = is_WaitEvent(hCam, IS_SET_EVENT_FRAME, INFINITE);
 	if(nRet == IS_SUCCESS)	
+	*/
+	HANDLE hEvent;	
+	is_InitEvent(hCam, hEvent, IS_SET_EVENT_FRAME);
+	is_EnableEvent(hCam, IS_SET_EVENT_FRAME);
+	while(true)
 	{
+	is_FreezeVideo(hCam, IS_DONT_WAIT);	
+	if (is_WaitEvent(hCam, IS_SET_EVENT_FRAME, 5000))		
+	{
+	   is_ForceTrigger(hCam);
+	}
+	
 	// Save image to file
 	// Save jpeg from active memory with quality 80 (without file open dialog)
 	IMAGE_FILE_PARAMS ImageFileParams;
@@ -234,7 +247,7 @@ int main()
 	ImageFileParams.pnImageID = NULL;
 	ImageFileParams.ppcImageMem = NULL;
 
-	wstring filename = L"/media/sdsto/image" + to_wstring(++img_num/*time(0)*/) + L".jpg";
+	wstring filename = L"./" + to_wstring(++img_num/*time(0)*/) + L".jpg";
 	ImageFileParams.pwchFileName = (wchar_t*)filename.c_str();
 	ImageFileParams.nFileType = IS_IMG_JPG;
 	ImageFileParams.nQuality = 80;
@@ -253,7 +266,7 @@ int main()
 		}	
 		cout << "FPS " << dblFPS << endl;
 
-	}	
+	//}	
 	}	
 
 	// Cleanup
